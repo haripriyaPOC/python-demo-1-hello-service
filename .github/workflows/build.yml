@@ -38,8 +38,8 @@ jobs:
       # Deploy to Kubernetes
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/python-backend \
-            python-backend=${{ secrets.DOCKER_USERNAME }}/python1-backend:v1
+          kubectl set image deployment/python1-backend \
+            python1-backend=${{ secrets.DOCKER_USERNAME }}/python1-backend:v1
 
       # Verify Deployment
       - name: Verify Kubernetes Deployment
