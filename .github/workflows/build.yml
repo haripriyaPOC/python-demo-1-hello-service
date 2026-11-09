@@ -35,13 +35,35 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/python1-backend:v1
 
-      # Deploy to Kubernetes
-      - name: Deploy to Kubernetes
+      - name: Diagnose Kubernetes API Connectivity
         run: |
-          kubectl set image deployment/python1-backend \
-            python1-backend=${{ secrets.DOCKER_USERNAME }}/python1-backend:v1
+          echo "Checking network routes..."
+          ip route
 
-      # Verify Deployment
-      - name: Verify Kubernetes Deployment
+          echo "Checking Kubernetes API port..."
+          nc -vz -w 5 172.31.30.220 6443
+
+          echo "Checking Kubernetes API readiness endpoint..."
+          curl -k -v --connect-timeout 5 \
+            https://172.31.30.220:6443/readyz
+
+      - name: Configure Kubernetes
+        shell: bash
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
-          kubectl rollout status deployment/python1-backend --timeout=180s
+          set -euo pipefail
+
+          mkdir -p "$HOME/.kube"
+          printf '%s\n' "$KUBE_CONFIG" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+          echo "Validating Kubernetes configuration..."
+          kubectl config current-context
+
+          echo "Checking Kubernetes cluster access..."
+          kubectl get nodes
+
+          echo "Deploying application..."
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
