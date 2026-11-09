@@ -17,11 +17,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Setup Python
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
 
       # Install dependencies
       - name: Install Dependencies
@@ -29,10 +24,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Run Python tests
+      - name: Create Python Virtual Environment
+        run: |
+          python3.12 -m venv .venv
+
+      - name: Install Dependencies
+        run: |
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.txt
+
       - name: Run Tests
         run: |
-          python -m pytest
+          .venv/bin/python -m pip install pytest
+          .venv/bin/python -m pytest
 
       # Login to Docker Hub
       - name: Docker Hub Login
